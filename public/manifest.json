@@ -1,0 +1,24 @@
+{
+  "name": "HydraFast — Water Fasting Companion",
+  "short_name": "HydraFast",
+  "description": "A safety-first water fasting companion that tracks your progress, monitors health signals, and guides refeeding.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F0F9FF",
+  "theme_color": "#0C4A6E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

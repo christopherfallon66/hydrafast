@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  /* Water Theme Colors */
+  --color-deep-ocean: #0C4A6E;
+  --color-still-water: #0284C7;
+  --color-shallow-pool: #38BDF8;
+  --color-morning-mist: #E0F2FE;
+  --color-seafoam: #ECFDF5;
+  --color-glacier: #F0F9FF;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #0C4A6E;
+  --color-text-secondary: #64748B;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+
+  /* Font families */
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+
+/* Base styles */
+body {
+  background-color: var(--color-glacier);
+  color: var(--color-text-primary);
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ripple effect for buttons */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(56, 189, 248, 0.3) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.ripple:active::after {
+  opacity: 1;
+  transition: opacity 0s;
+}
+
+/* Water fill animation */
+@keyframes wave {
+  0% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-25%) translateY(-2px); }
+  100% { transform: translateX(-50%) translateY(0); }
+}
+
+.water-wave {
+  animation: wave 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .water-wave {
+    animation: none;
+  }
+  .ripple::after {
+    display: none;
+  }
+}
+
+/* Hide scrollbar for horizontal timeline */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

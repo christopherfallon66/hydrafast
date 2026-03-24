@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>HydraFast — Water Fasting Companion</title>
+    <meta name="description" content="A safety-first water fasting companion that tracks your progress, monitors health signals, and guides refeeding." />
+    <meta name="theme-color" content="#0C4A6E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="HydraFast" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register service worker for PWA + auto-update
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            // Check for updates every 60 seconds
+            setInterval(() => reg.update(), 60000);
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                    // New version available — show subtle refresh prompt
+                    if (confirm('A new version of HydraFast is available. Refresh to update?')) {
+                      window.location.reload();
+                    }
+                  }
+                });
+              }
+            });
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
