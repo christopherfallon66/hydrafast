@@ -59,7 +59,7 @@ export function FastTimer() {
             {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </div>
           {targetHours && (
-            <div className="text-text-secondary text-xs mt-1">
+            <div className="text-white text-xs mt-1">
               of {targetHours}h goal
             </div>
           )}
@@ -70,7 +70,7 @@ export function FastTimer() {
       <div className="bg-morning-mist px-4 py-2 rounded-full mb-2">
         <span className="text-sm font-medium text-still-water">{phase.name}</span>
       </div>
-      <p className="text-text-secondary text-xs text-center max-w-xs px-4">{phase.description}</p>
+      <p className="text-white text-xs text-center max-w-xs px-4">{phase.description}</p>
     </div>
   );
 }
