@@ -77,3 +77,33 @@ body {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* === Dark Mode (Deep Ocean / Midnight Water) === */
+.dark {
+  --color-deep-ocean: #CBD5E1;
+  --color-still-water: #38BDF8;
+  --color-shallow-pool: #0284C7;
+  --color-morning-mist: #1E293B;
+  --color-seafoam: #064E3B;
+  --color-glacier: #0F172A;
+  --color-surface: #1E293B;
+  --color-text-primary: #E2E8F0;
+  --color-text-secondary: #94A3B8;
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-danger: #F87171;
+}
+
+.dark body,
+.dark {
+  background-color: #0F172A;
+  color: #E2E8F0;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { WaterTracker } from '../components/water/WaterTracker';
 import { WaterHistory } from '../components/water/WaterHistory';
 import { WeightTracker } from '../components/metrics/WeightTracker';
+import { ElectrolyteTracker } from '../components/electrolytes/ElectrolyteTracker';
+import { GlucoseKetoneTracker } from '../components/metrics/GlucoseKetoneTracker';
 
 const TABS = [
   { key: 'water', label: 'Water' },
+  { key: 'electrolytes', label: 'Electrolytes' },
   { key: 'metrics', label: 'Weight' },
+  { key: 'glucose', label: 'Glucose/Ketone' },
 ] as const;
 
 export function TrackScreen() {
@@ -16,12 +20,12 @@ export function TrackScreen() {
       <h1 className="text-lg font-bold text-deep-ocean mb-4">Track</h1>
 
       {/* Tab selector */}
-      <div className="flex gap-1 bg-morning-mist rounded-xl p-1 mb-4">
+      <div className="flex gap-1 bg-morning-mist rounded-xl p-1 mb-4 overflow-x-auto hide-scrollbar">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap px-2 ${
               tab === t.key ? 'bg-surface text-deep-ocean shadow-sm' : 'text-text-secondary'
             }`}
           >
@@ -37,9 +41,9 @@ export function TrackScreen() {
             <WaterHistory />
           </>
         )}
-        {tab === 'metrics' && (
-          <WeightTracker />
-        )}
+        {tab === 'electrolytes' && <ElectrolyteTracker />}
+        {tab === 'metrics' && <WeightTracker />}
+        {tab === 'glucose' && <GlucoseKetoneTracker />}
       </div>
     </div>
   );

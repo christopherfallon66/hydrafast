@@ -3,6 +3,7 @@ import { useFastStore } from '../store/fastStore';
 import { useWaterStore } from '../store/waterStore';
 import { useCheckInStore } from '../store/checkinStore';
 import { useBenefitsStore } from '../store/benefitsStore';
+import { useSettingsStore } from '../store/settingsStore';
 import { FastTimer } from '../components/timer/FastTimer';
 import { StartFastModal } from '../components/timer/StartFastModal';
 import { PhaseCatchUp } from '../components/timer/PhaseCatchUp';
@@ -14,6 +15,7 @@ import { Modal } from '../components/common/Modal';
 import { getElapsedHours, formatDurationShort, formatLocalDateTime } from '../utils/conversions';
 import { getCurrentPhase } from '../constants/phases';
 import { getAllFasts } from '../db/queries';
+import { requestNotificationPermission, setupFastNotifications, notificationManager } from '../utils/notifications';
 
 export function HomeScreen() {
   const { activeFast, loadActiveFast, endFast } = useFastStore();
@@ -26,6 +28,8 @@ export function HomeScreen() {
   const [stats, setStats] = useState({ streak: 0, longest: 0, totalHours: 0 });
   const [showCatchUp, setShowCatchUp] = useState(false);
 
+  const settings = useSettingsStore();
+
   useEffect(() => {
     loadActiveFast();
     loadToday();
@@ -33,7 +37,7 @@ export function HomeScreen() {
     loadStats();
   }, []);
 
-  // Load benefit when fast is active
+  // Load benefit and set up notifications when fast is active
   useEffect(() => {
     if (activeFast) {
       const hours = getElapsedHours(activeFast.start_time);
@@ -44,6 +48,15 @@ export function HomeScreen() {
       if (hours > 1) {
         setShowCatchUp(true);
       }
+
+      // Request notification permission and set up scheduled notifications
+      requestNotificationPermission().then(granted => {
+        if (granted) {
+          setupFastNotifications(activeFast.start_time, settings);
+        }
+      });
+    } else {
+      notificationManager.clearAll();
     }
   }, [activeFast?.id]);
 

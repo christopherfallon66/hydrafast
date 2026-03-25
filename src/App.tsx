@@ -7,9 +7,16 @@ import { CheckInScreen } from './screens/CheckInScreen';
 import { LearnScreen } from './screens/LearnScreen';
 import { MoreScreen } from './screens/MoreScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
+import { TutorialOverlay } from './components/onboarding/TutorialOverlay';
+import { useEffect } from 'react';
 
 function AppContent() {
-  const { disclaimer_acknowledged, contraindications_shown, contraindication_flags } = useSettingsStore();
+  const { disclaimer_acknowledged, contraindications_shown, contraindication_flags, dark_mode, onboarding_tutorial_complete } = useSettingsStore();
+
+  // Apply dark mode class to html element
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark_mode);
+  }, [dark_mode]);
 
   // Show onboarding if not completed
   if (!disclaimer_acknowledged || !contraindications_shown) {
@@ -36,6 +43,9 @@ function AppContent() {
       </Routes>
 
       <BottomNav />
+
+      {/* Tutorial overlay for first-time users */}
+      {!onboarding_tutorial_complete && <TutorialOverlay />}
     </div>
   );
 }

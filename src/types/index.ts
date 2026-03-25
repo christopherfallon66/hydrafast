@@ -127,4 +127,6 @@ export interface UserSettings {
   contraindications_shown: boolean;
   contraindication_flags: string[];
   name: string;
+  dark_mode: boolean;
+  onboarding_tutorial_complete: boolean;
 }

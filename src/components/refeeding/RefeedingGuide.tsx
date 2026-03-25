@@ -1,9 +1,11 @@
 import { getRefeedingProtocol } from '../../constants/refeeding';
+import { getRecipesForTier } from '../../constants/recipes';
 import { useFastStore } from '../../store/fastStore';
 import { getElapsedHours } from '../../utils/conversions';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { AlertBanner } from '../common/AlertBanner';
+import { RecipeCard } from './RecipeCard';
 
 interface RefeedingGuideProps {
   overrideHours?: number;
@@ -14,6 +16,7 @@ export function RefeedingGuide({ overrideHours }: RefeedingGuideProps) {
 
   const hours = overrideHours ?? (activeFast ? getElapsedHours(activeFast.start_time) : 24);
   const protocol = getRefeedingProtocol(hours);
+  const recipes = getRecipesForTier(protocol.tier);
 
   return (
     <div className="space-y-4">
@@ -62,6 +65,19 @@ export function RefeedingGuide({ overrideHours }: RefeedingGuideProps) {
           </div>
         </Card>
       ))}
+
+      {/* Recipes section */}
+      {recipes.length > 0 && (
+        <>
+          <div className="pt-2">
+            <h3 className="text-base font-bold text-deep-ocean mb-1">Recipes</h3>
+            <p className="text-xs text-text-secondary mb-3">Simple meals for each refeeding phase. Tap for full recipe.</p>
+          </div>
+          {recipes.map((recipe, i) => (
+            <RecipeCard key={i} recipe={recipe} />
+          ))}
+        </>
+      )}
 
       <p className="text-xs text-text-secondary text-center px-4">
         This is not medical advice. Consult a healthcare provider before fasting, especially for extended fasts.

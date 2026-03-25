@@ -27,6 +27,8 @@ const DEFAULT_SETTINGS: UserSettings = {
   contraindications_shown: false,
   contraindication_flags: [],
   name: '',
+  dark_mode: false,
+  onboarding_tutorial_complete: false,
 };
 
 export const useSettingsStore = create<SettingsState>()(

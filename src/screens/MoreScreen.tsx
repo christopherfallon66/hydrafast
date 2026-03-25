@@ -5,31 +5,66 @@ import { useSettingsStore } from '../store/settingsStore';
 import { getAllFasts, logPastFast } from '../db/queries';
 import { Modal } from '../components/common/Modal';
 import { formatDurationShort, formatLocalDateTime } from '../utils/conversions';
+import { JournalEditor } from '../components/journal/JournalEditor';
+import { JournalList } from '../components/journal/JournalList';
+import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
+import { downloadJSONExport, downloadCSVExport } from '../utils/export';
 import type { FastSession } from '../types';
 
 export function MoreScreen() {
-  const [view, setView] = useState<'menu' | 'history' | 'settings'>('menu');
+  type View = 'menu' | 'history' | 'settings' | 'journal' | 'analytics' | 'export';
+  const [view, setView] = useState<View>('menu');
 
   return (
     <div className="px-4 pt-4 pb-24">
       <h1 className="text-lg font-bold text-deep-ocean mb-4">More</h1>
 
-      {view === 'menu' && <MenuView onNavigate={setView} />}
+      {view === 'menu' && <MenuView onNavigate={(v: View) => setView(v)} />}
       {view === 'history' && <HistoryView onBack={() => setView('menu')} />}
+      {view === 'journal' && <JournalView onBack={() => setView('menu')} />}
+      {view === 'analytics' && <AnalyticsView onBack={() => setView('menu')} />}
+      {view === 'export' && <ExportView onBack={() => setView('menu')} />}
       {view === 'settings' && <SettingsView onBack={() => setView('menu')} />}
     </div>
   );
 }
 
-function MenuView({ onNavigate }: { onNavigate: (v: 'history' | 'settings') => void }) {
+function MenuView({ onNavigate }: { onNavigate: (v: 'history' | 'settings' | 'journal' | 'analytics' | 'export') => void }) {
   return (
     <div className="space-y-2">
+      <Card onClick={() => onNavigate('journal')} className="cursor-pointer">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">📝</span>
+          <div>
+            <h3 className="text-sm font-bold text-deep-ocean">Journal</h3>
+            <p className="text-xs text-text-secondary">Write about your fasting journey</p>
+          </div>
+        </div>
+      </Card>
       <Card onClick={() => onNavigate('history')} className="cursor-pointer">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">📋</span>
+          <div>
+            <h3 className="text-sm font-bold text-deep-ocean">Fast History</h3>
+            <p className="text-xs text-text-secondary">View and log past fasts</p>
+          </div>
+        </div>
+      </Card>
+      <Card onClick={() => onNavigate('analytics')} className="cursor-pointer">
         <div className="flex items-center gap-3">
           <span className="text-xl">📊</span>
           <div>
-            <h3 className="text-sm font-bold text-deep-ocean">History & Analytics</h3>
-            <p className="text-xs text-text-secondary">View past fasts and stats</p>
+            <h3 className="text-sm font-bold text-deep-ocean">Analytics</h3>
+            <p className="text-xs text-text-secondary">Charts, trends, and insights</p>
+          </div>
+        </div>
+      </Card>
+      <Card onClick={() => onNavigate('export')} className="cursor-pointer">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">💾</span>
+          <div>
+            <h3 className="text-sm font-bold text-deep-ocean">Export Data</h3>
+            <p className="text-xs text-text-secondary">Download your data as JSON or CSV</p>
           </div>
         </div>
       </Card>
@@ -42,6 +77,85 @@ function MenuView({ onNavigate }: { onNavigate: (v: 'history' | 'settings') => v
           </div>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function BackButton({ onBack }: { onBack: () => void }) {
+  return (
+    <button onClick={onBack} className="text-still-water text-sm mb-4 flex items-center gap-1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+      Back
+    </button>
+  );
+}
+
+function JournalView({ onBack }: { onBack: () => void }) {
+  const [composing, setComposing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  return (
+    <div>
+      <BackButton onBack={onBack} />
+      {composing ? (
+        <JournalEditor
+          onSaved={() => { setComposing(false); setRefreshKey(k => k + 1); }}
+          onCancel={() => setComposing(false)}
+        />
+      ) : (
+        <JournalList onCompose={() => setComposing(true)} refreshKey={refreshKey} />
+      )}
+    </div>
+  );
+}
+
+function AnalyticsView({ onBack }: { onBack: () => void }) {
+  return (
+    <div>
+      <BackButton onBack={onBack} />
+      <AnalyticsDashboard />
+    </div>
+  );
+}
+
+function ExportView({ onBack }: { onBack: () => void }) {
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (format: 'json' | 'csv') => {
+    setExporting(true);
+    try {
+      if (format === 'json') {
+        await downloadJSONExport();
+      } else {
+        await downloadCSVExport();
+      }
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div>
+      <BackButton onBack={onBack} />
+      <div className="space-y-4">
+        <Card>
+          <h3 className="text-sm font-bold text-deep-ocean mb-2">Export Your Data</h3>
+          <p className="text-xs text-text-secondary mb-4">
+            Download all your HydraFast data. This includes fasts, water logs, electrolyte logs, check-ins, metrics, and journal entries.
+          </p>
+          <div className="space-y-2">
+            <Button onClick={() => handleExport('json')} disabled={exporting} className="w-full">
+              {exporting ? 'Exporting...' : 'Download as JSON'}
+            </Button>
+            <Button variant="secondary" onClick={() => handleExport('csv')} disabled={exporting} className="w-full">
+              {exporting ? 'Exporting...' : 'Download as CSV'}
+            </Button>
+          </div>
+        </Card>
+        <p className="text-xs text-text-secondary text-center">
+          Your data is stored locally on this device. Export regularly to keep a backup.
+        </p>
+      </div>
     </div>
   );
 }
@@ -66,10 +180,7 @@ function HistoryView({ onBack }: { onBack: () => void }) {
 
   return (
     <div>
-      <button onClick={onBack} className="text-still-water text-sm mb-4 flex items-center gap-1">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-        Back
-      </button>
+      <BackButton onBack={onBack} />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -174,7 +285,6 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
     await logPastFast(start.toISOString(), end.toISOString(), status, notes || undefined);
     onSaved();
     onClose();
-    // Reset form
     setStartDate('');
     setStartTime('');
     setDurationHours('');
@@ -197,22 +307,11 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-xs text-text-secondary mb-1">Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-              />
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
             </div>
             <div className="flex-1">
               <label className="block text-xs text-text-secondary mb-1">Time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-              />
+              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
             </div>
           </div>
         </div>
@@ -221,48 +320,19 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
         <div>
           <label className="block text-sm font-medium text-deep-ocean mb-2">How long did it last?</label>
           <div className="flex gap-2 mb-3">
-            <button
-              onClick={() => setDurationMode('duration')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                durationMode === 'duration' ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'
-              }`}
-            >
-              Enter duration
-            </button>
-            <button
-              onClick={() => setDurationMode('endtime')}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                durationMode === 'endtime' ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'
-              }`}
-            >
-              Enter end time
-            </button>
+            <button onClick={() => setDurationMode('duration')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${durationMode === 'duration' ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'}`}>Enter duration</button>
+            <button onClick={() => setDurationMode('endtime')} className={`flex-1 py-2 rounded-lg text-sm font-medium ${durationMode === 'endtime' ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'}`}>Enter end time</button>
           </div>
 
           {durationMode === 'duration' ? (
             <div className="space-y-2">
               <div className="flex gap-2 flex-wrap">
                 {[16, 24, 36, 48, 72, 96, 120].map(h => (
-                  <button
-                    key={h}
-                    onClick={() => setDurationHours(h.toString())}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                      durationHours === h.toString() ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'
-                    }`}
-                  >
-                    {h}h
-                  </button>
+                  <button key={h} onClick={() => setDurationHours(h.toString())} className={`px-3 py-2 rounded-lg text-sm font-medium ${durationHours === h.toString() ? 'bg-still-water text-white' : 'bg-morning-mist text-deep-ocean'}`}>{h}h</button>
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={[16, 24, 36, 48, 72, 96, 120].includes(Number(durationHours)) ? '' : durationHours}
-                  onChange={(e) => setDurationHours(e.target.value)}
-                  placeholder="Custom hours"
-                  className="w-32 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-                  min="1"
-                />
+                <input type="number" value={[16, 24, 36, 48, 72, 96, 120].includes(Number(durationHours)) ? '' : durationHours} onChange={(e) => setDurationHours(e.target.value)} placeholder="Custom hours" className="w-32 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" min="1" />
                 <span className="text-sm text-text-secondary">hours</span>
               </div>
             </div>
@@ -270,22 +340,11 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-xs text-text-secondary mb-1">End date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-                />
+                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} max={new Date().toISOString().split('T')[0]} className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
               </div>
               <div className="flex-1">
                 <label className="block text-xs text-text-secondary mb-1">End time</label>
-                <input
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-                />
+                <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
               </div>
             </div>
           )}
@@ -295,39 +354,18 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
         <div>
           <label className="block text-sm font-medium text-deep-ocean mb-2">How did it end?</label>
           <div className="flex gap-2">
-            <button
-              onClick={() => setStatus('completed')}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium ${
-                status === 'completed' ? 'bg-success text-white' : 'bg-morning-mist text-deep-ocean'
-              }`}
-            >
-              Completed
-            </button>
-            <button
-              onClick={() => setStatus('broken')}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium ${
-                status === 'broken' ? 'bg-text-secondary text-white' : 'bg-morning-mist text-deep-ocean'
-              }`}
-            >
-              Ended early
-            </button>
+            <button onClick={() => setStatus('completed')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium ${status === 'completed' ? 'bg-success text-white' : 'bg-morning-mist text-deep-ocean'}`}>Completed</button>
+            <button onClick={() => setStatus('broken')} className={`flex-1 py-2.5 rounded-lg text-sm font-medium ${status === 'broken' ? 'bg-text-secondary text-white' : 'bg-morning-mist text-deep-ocean'}`}>Ended early</button>
           </div>
         </div>
 
         {/* Notes */}
         <div>
           <label className="block text-sm font-medium text-deep-ocean mb-2">Notes (optional)</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="How did this fast go? What did you learn?"
-            className="w-full bg-glacier border border-morning-mist rounded-xl px-3 py-2 text-sm text-deep-ocean resize-none h-20"
-          />
+          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="How did this fast go? What did you learn?" className="w-full bg-glacier border border-morning-mist rounded-xl px-3 py-2 text-sm text-deep-ocean resize-none h-20" />
         </div>
 
-        <Button onClick={handleSave} className="w-full" size="lg">
-          Save Past Fast
-        </Button>
+        <Button onClick={handleSave} className="w-full" size="lg">Save Past Fast</Button>
       </div>
     </Modal>
   );
@@ -339,10 +377,7 @@ function SettingsView({ onBack }: { onBack: () => void }) {
 
   return (
     <div>
-      <button onClick={onBack} className="text-still-water text-sm mb-4 flex items-center gap-1">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-        Back
-      </button>
+      <BackButton onBack={onBack} />
 
       <div className="space-y-4">
         {/* Profile */}
@@ -351,25 +386,13 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           <div className="space-y-3">
             <div>
               <label className="block text-xs text-text-secondary mb-1">Name (optional)</label>
-              <input
-                type="text"
-                value={settings.name}
-                onChange={(e) => updateSettings({ name: e.target.value })}
-                className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-                placeholder="Your name"
-              />
+              <input type="text" value={settings.name} onChange={(e) => updateSettings({ name: e.target.value })} className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" placeholder="Your name" />
             </div>
             <div>
               <label className="block text-xs text-text-secondary mb-1">Units</label>
               <div className="flex gap-2">
                 {(['imperial', 'metric'] as const).map(u => (
-                  <button
-                    key={u}
-                    onClick={() => updateSettings({ units: u })}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                      settings.units === u ? 'bg-still-water text-white' : 'bg-glacier text-deep-ocean'
-                    }`}
-                  >
+                  <button key={u} onClick={() => updateSettings({ units: u })} className={`flex-1 py-2 rounded-lg text-sm font-medium ${settings.units === u ? 'bg-still-water text-white' : 'bg-glacier text-deep-ocean'}`}>
                     {u === 'imperial' ? 'Imperial (lbs, oz)' : 'Metric (kg, mL)'}
                   </button>
                 ))}
@@ -378,19 +401,28 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           </div>
         </Card>
 
+        {/* Dark Mode */}
+        <Card>
+          <h3 className="text-sm font-bold text-deep-ocean mb-3">Appearance</h3>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm text-deep-ocean">Dark Mode</span>
+              <p className="text-xs text-text-secondary">Deep ocean midnight palette</p>
+            </div>
+            <button
+              onClick={() => updateSettings({ dark_mode: !settings.dark_mode } as Record<string, unknown>)}
+              className={`w-12 h-7 rounded-full transition-colors relative ${settings.dark_mode ? 'bg-still-water' : 'bg-gray-300'}`}
+            >
+              <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${settings.dark_mode ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+        </Card>
+
         {/* Water Goal */}
         <Card>
           <h3 className="text-sm font-bold text-deep-ocean mb-3">Water Goal</h3>
           <div className="flex items-center gap-3">
-            <input
-              type="number"
-              value={settings.units === 'imperial' ? Math.round(settings.water_goal_ml / 29.5735) : settings.water_goal_ml}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                updateSettings({ water_goal_ml: settings.units === 'imperial' ? Math.round(val * 29.5735) : val });
-              }}
-              className="w-24 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-            />
+            <input type="number" value={settings.units === 'imperial' ? Math.round(settings.water_goal_ml / 29.5735) : settings.water_goal_ml} onChange={(e) => { const val = Number(e.target.value); updateSettings({ water_goal_ml: settings.units === 'imperial' ? Math.round(val * 29.5735) : val }); }} className="w-24 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
             <span className="text-sm text-text-secondary">{settings.units === 'imperial' ? 'oz / day' : 'mL / day'}</span>
           </div>
         </Card>
@@ -399,13 +431,7 @@ function SettingsView({ onBack }: { onBack: () => void }) {
         <Card>
           <h3 className="text-sm font-bold text-deep-ocean mb-3">Default Fast Duration</h3>
           <div className="flex items-center gap-3">
-            <input
-              type="number"
-              value={settings.default_fast_hours || ''}
-              onChange={(e) => updateSettings({ default_fast_hours: e.target.value ? Number(e.target.value) : null })}
-              placeholder="None"
-              className="w-24 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-            />
+            <input type="number" value={settings.default_fast_hours || ''} onChange={(e) => updateSettings({ default_fast_hours: e.target.value ? Number(e.target.value) : null })} placeholder="None" className="w-24 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
             <span className="text-sm text-text-secondary">hours</span>
           </div>
         </Card>
@@ -417,22 +443,12 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           <div className="flex items-center gap-3">
             <div>
               <label className="text-xs text-text-secondary">Wake</label>
-              <input
-                type="number" min="0" max="23"
-                value={settings.wake_hour}
-                onChange={(e) => updateSettings({ wake_hour: Number(e.target.value) })}
-                className="w-16 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean block"
-              />
+              <input type="number" min="0" max="23" value={settings.wake_hour} onChange={(e) => updateSettings({ wake_hour: Number(e.target.value) })} className="w-16 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean block" />
             </div>
             <span className="text-text-secondary mt-4">to</span>
             <div>
               <label className="text-xs text-text-secondary">Sleep</label>
-              <input
-                type="number" min="0" max="23"
-                value={settings.sleep_hour}
-                onChange={(e) => updateSettings({ sleep_hour: Number(e.target.value) })}
-                className="w-16 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean block"
-              />
+              <input type="number" min="0" max="23" value={settings.sleep_hour} onChange={(e) => updateSettings({ sleep_hour: Number(e.target.value) })} className="w-16 bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean block" />
             </div>
           </div>
         </Card>
@@ -441,20 +457,8 @@ function SettingsView({ onBack }: { onBack: () => void }) {
         <Card>
           <h3 className="text-sm font-bold text-deep-ocean mb-3">Emergency Contact</h3>
           <div className="space-y-2">
-            <input
-              type="text"
-              value={settings.emergency_contact_name}
-              onChange={(e) => updateSettings({ emergency_contact_name: e.target.value })}
-              placeholder="Contact name"
-              className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-            />
-            <input
-              type="tel"
-              value={settings.emergency_contact_phone}
-              onChange={(e) => updateSettings({ emergency_contact_phone: e.target.value })}
-              placeholder="Phone number"
-              className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean"
-            />
+            <input type="text" value={settings.emergency_contact_name} onChange={(e) => updateSettings({ emergency_contact_name: e.target.value })} placeholder="Contact name" className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
+            <input type="tel" value={settings.emergency_contact_phone} onChange={(e) => updateSettings({ emergency_contact_phone: e.target.value })} placeholder="Phone number" className="w-full bg-glacier border border-morning-mist rounded-lg px-3 py-2 text-sm text-deep-ocean" />
           </div>
         </Card>
 
@@ -471,7 +475,6 @@ function SettingsView({ onBack }: { onBack: () => void }) {
           </div>
         </Card>
 
-        {/* Disclaimer */}
         <p className="text-xs text-text-secondary text-center px-4 pb-4">
           HydraFast is for informational purposes only and is not medical advice. Consult a healthcare provider before fasting.
         </p>
