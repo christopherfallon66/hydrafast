@@ -12,30 +12,88 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
+    <style>
+      /* Update toast styles - rendered before React loads */
+      #update-toast {
+        display: none;
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: #0C4A6E;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+        font-size: 14px;
+        max-width: 340px;
+        width: calc(100% - 32px);
+        text-align: center;
+        animation: slideUp 0.3s ease-out;
+      }
+      #update-toast.show { display: block; }
+      #update-toast button {
+        background: #38BDF8;
+        color: #0C4A6E;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 13px;
+        margin-top: 8px;
+        cursor: pointer;
+        min-height: 36px;
+      }
+      #update-toast button:active { opacity: 0.8; }
+      #update-toast .dismiss {
+        background: transparent;
+        color: rgba(255,255,255,0.7);
+        font-weight: normal;
+        margin-left: 8px;
+      }
+      @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="update-toast">
+      <div>A new version of HydraFast is available</div>
+      <div style="margin-top: 8px;">
+        <button onclick="window.location.reload()">Update Now</button>
+        <button class="dismiss" onclick="this.closest('#update-toast').classList.remove('show')">Later</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      // Register service worker for PWA + auto-update
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then(reg => {
             // Check for updates every 60 seconds
             setInterval(() => reg.update(), 60000);
+
+            // Listen for new service worker activation
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                    // New version available — show subtle refresh prompt
-                    if (confirm('A new version of HydraFast is available. Refresh to update?')) {
-                      window.location.reload();
-                    }
+                    document.getElementById('update-toast').classList.add('show');
                   }
                 });
               }
             });
+          });
+
+          // Also listen for SW_UPDATED message from service worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SW_UPDATED') {
+              document.getElementById('update-toast').classList.add('show');
+            }
           });
         });
       }
