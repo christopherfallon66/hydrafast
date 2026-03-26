@@ -172,6 +172,14 @@ export async function getAllJournalEntries(): Promise<JournalEntry[]> {
   return db.journal_entries.orderBy('timestamp').reverse().toArray();
 }
 
+export async function updateJournalEntry(id: string, data: Partial<Omit<JournalEntry, 'id' | 'timestamp'>>): Promise<void> {
+  await db.journal_entries.update(id, data);
+}
+
+export async function deleteJournalEntry(id: string): Promise<void> {
+  await db.journal_entries.delete(id);
+}
+
 // === Benefits Shown ===
 export async function markBenefitShown(benefitId: string): Promise<void> {
   await db.benefits_shown.add({

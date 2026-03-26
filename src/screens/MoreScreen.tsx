@@ -92,18 +92,30 @@ function BackButton({ onBack }: { onBack: () => void }) {
 
 function JournalView({ onBack }: { onBack: () => void }) {
   const [composing, setComposing] = useState(false);
+  const [editEntry, setEditEntry] = useState<import('../types').JournalEntry | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleDone = () => {
+    setComposing(false);
+    setEditEntry(null);
+    setRefreshKey(k => k + 1);
+  };
 
   return (
     <div>
       <BackButton onBack={onBack} />
-      {composing ? (
+      {composing || editEntry ? (
         <JournalEditor
-          onSaved={() => { setComposing(false); setRefreshKey(k => k + 1); }}
-          onCancel={() => setComposing(false)}
+          editEntry={editEntry}
+          onSaved={handleDone}
+          onCancel={() => { setComposing(false); setEditEntry(null); }}
         />
       ) : (
-        <JournalList onCompose={() => setComposing(true)} refreshKey={refreshKey} />
+        <JournalList
+          onCompose={() => setComposing(true)}
+          onEdit={(entry) => setEditEntry(entry)}
+          refreshKey={refreshKey}
+        />
       )}
     </div>
   );
