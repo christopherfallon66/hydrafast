@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { db } from './index';
-import type { FastSession, WaterLog, ElectrolyteLog, HealthCheckIn, BodyMetric, JournalEntry } from '../types';
+import type { FastSession, WaterLog, ElectrolyteLog, HealthCheckIn, BodyMetric, JournalEntry, Supplement } from '../types';
 
 // Helpers
 const localISO = () => new Date().toISOString();
@@ -189,4 +189,46 @@ export async function getRecentlyShownBenefitIds(withinDays: number = 7): Promis
     .above(cutoff.toISOString())
     .toArray();
   return records.map(r => r.benefit_id);
+}
+
+// === Supplements ===
+export async function addSupplement(data: Omit<Supplement, 'id' | 'created_at'>): Promise<Supplement> {
+  const supplement: Supplement = {
+    ...data,
+    id: newId(),
+    created_at: localISO(),
+  };
+  await db.supplements.add(supplement);
+  return supplement;
+}
+
+export async function getAllSupplements(): Promise<Supplement[]> {
+  return db.supplements.orderBy('name').toArray();
+}
+
+export async function updateSupplement(id: string, data: Partial<Omit<Supplement, 'id' | 'created_at'>>): Promise<void> {
+  await db.supplements.update(id, data);
+}
+
+export async function deleteSupplement(id: string): Promise<void> {
+  await db.supplements.delete(id);
+}
+
+export async function logSupplementServing(
+  supplement: Supplement,
+  servings: number,
+  fastSessionId?: string | null
+): Promise<void> {
+  const types: Array<{ type: 'sodium' | 'potassium' | 'magnesium'; mg: number }> = [
+    { type: 'sodium', mg: supplement.sodium_mg * servings },
+    { type: 'potassium', mg: supplement.potassium_mg * servings },
+    { type: 'magnesium', mg: supplement.magnesium_mg * servings },
+  ];
+
+  for (const { type, mg } of types) {
+    if (mg > 0) {
+      const label = supplement.serving_label.replace(/^\d+\s*/, '');
+      await addElectrolyteLog(type, mg, fastSessionId, `${supplement.name} (${servings} ${label})`);
+    }
+  }
 }

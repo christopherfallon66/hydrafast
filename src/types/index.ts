@@ -88,6 +88,16 @@ export interface FastingPhase {
   detail: string;
 }
 
+export interface Supplement {
+  id: string;
+  name: string;
+  sodium_mg: number;
+  potassium_mg: number;
+  magnesium_mg: number;
+  serving_label: string; // e.g. "1 scoop", "1 capsule"
+  created_at: string;
+}
+
 export type AlertLevel = 'none' | 'yellow' | 'orange' | 'red';
 
 export type RefeedingTier = 'short' | 'medium' | 'extended';

@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { FastSession, WaterLog, ElectrolyteLog, HealthCheckIn, BodyMetric, JournalEntry, BenefitShown } from '../types';
+import type { FastSession, WaterLog, ElectrolyteLog, HealthCheckIn, BodyMetric, JournalEntry, BenefitShown, Supplement } from '../types';
 
 export class HydraFastDB extends Dexie {
   fast_sessions!: Table<FastSession>;
@@ -9,6 +9,7 @@ export class HydraFastDB extends Dexie {
   body_metrics!: Table<BodyMetric>;
   journal_entries!: Table<JournalEntry>;
   benefits_shown!: Table<BenefitShown>;
+  supplements!: Table<Supplement>;
 
   constructor() {
     super('hydrafast');
@@ -20,6 +21,16 @@ export class HydraFastDB extends Dexie {
       body_metrics: 'id, timestamp, type',
       journal_entries: 'id, fast_session_id, timestamp',
       benefits_shown: 'id, benefit_id, shown_at',
+    });
+    this.version(2).stores({
+      fast_sessions: 'id, status, start_time',
+      water_logs: 'id, fast_session_id, timestamp',
+      electrolyte_logs: 'id, fast_session_id, timestamp, type',
+      health_checkins: 'id, fast_session_id, timestamp, alert_level',
+      body_metrics: 'id, timestamp, type',
+      journal_entries: 'id, fast_session_id, timestamp',
+      benefits_shown: 'id, benefit_id, shown_at',
+      supplements: 'id, name, created_at',
     });
   }
 }
