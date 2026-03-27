@@ -12,7 +12,7 @@ import { downloadJSONExport, downloadCSVExport } from '../utils/export';
 import type { FastSession } from '../types';
 
 export function MoreScreen() {
-  type View = 'menu' | 'history' | 'settings' | 'journal' | 'analytics' | 'export';
+  type View = 'menu' | 'history' | 'settings' | 'journal' | 'analytics' | 'export' | 'help';
   const [view, setView] = useState<View>('menu');
 
   return (
@@ -25,13 +25,23 @@ export function MoreScreen() {
       {view === 'analytics' && <AnalyticsView onBack={() => setView('menu')} />}
       {view === 'export' && <ExportView onBack={() => setView('menu')} />}
       {view === 'settings' && <SettingsView onBack={() => setView('menu')} />}
+      {view === 'help' && <HelpView onBack={() => setView('menu')} />}
     </div>
   );
 }
 
-function MenuView({ onNavigate }: { onNavigate: (v: 'history' | 'settings' | 'journal' | 'analytics' | 'export') => void }) {
+function MenuView({ onNavigate }: { onNavigate: (v: 'history' | 'settings' | 'journal' | 'analytics' | 'export' | 'help') => void }) {
   return (
     <div className="space-y-2">
+      <Card onClick={() => onNavigate('help')} className="cursor-pointer">
+        <div className="flex items-center gap-3">
+          <span className="text-xl">❓</span>
+          <div>
+            <h3 className="text-sm font-bold text-deep-ocean">Help & FAQ</h3>
+            <p className="text-xs text-text-secondary">How to use HydraFast & install on your phone</p>
+          </div>
+        </div>
+      </Card>
       <Card onClick={() => onNavigate('journal')} className="cursor-pointer">
         <div className="flex items-center gap-3">
           <span className="text-xl">📝</span>
@@ -380,6 +390,220 @@ function LogPastFastModal({ open, onClose, onSaved }: { open: boolean; onClose: 
         <Button onClick={handleSave} className="w-full" size="lg">Save Past Fast</Button>
       </div>
     </Modal>
+  );
+}
+
+function HelpView({ onBack }: { onBack: () => void }) {
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const toggle = (id: string) => setOpenSection(openSection === id ? null : id);
+
+  return (
+    <div>
+      <BackButton onBack={onBack} />
+
+      {/* Install on iPhone */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('iphone')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">📱</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Install on iPhone</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'iphone' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'iphone' && (
+          <div className="mt-3 space-y-3">
+            <Step num={1} text="Open Safari and go to hydrafast.vercel.app" />
+            <Step num={2} text='Tap the Share button at the bottom of the screen (the square with an arrow pointing up)' />
+            <Step num={3} text='Scroll down and tap "Add to Home Screen"' />
+            <Step num={4} text='Tap "Add" in the top right corner' />
+            <Step num={5} text="HydraFast will appear on your home screen as a full app — no app store needed!" />
+            <p className="text-xs text-text-secondary italic">Note: You must use Safari. Chrome and other browsers on iPhone do not support installing web apps.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Install on Android */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('android')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🤖</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Install on Android</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'android' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'android' && (
+          <div className="mt-3 space-y-3">
+            <Step num={1} text="Open Chrome and go to hydrafast.vercel.app" />
+            <Step num={2} text='Tap the three-dot menu in the top right corner' />
+            <Step num={3} text='Tap "Add to Home screen" or "Install app"' />
+            <Step num={4} text='Tap "Install" when prompted' />
+            <Step num={5} text="HydraFast will appear on your home screen and in your app drawer just like a regular app!" />
+            <p className="text-xs text-text-secondary italic">Note: If you see a banner at the bottom saying "Add HydraFast to Home screen," you can tap that instead.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Getting Started */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('start')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🚀</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Getting Started</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'start' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'start' && (
+          <div className="mt-3 space-y-3">
+            <Step num={1} text='Tap "Start Fast" on the Home screen. Set a goal duration or leave it open-ended.' />
+            <Step num={2} text="Already mid-fast? Tap the clock icon to set a custom start time and HydraFast will catch you up on what your body has been through." />
+            <Step num={3} text="Log your water intake throughout the day using the quick-add buttons on the Track tab." />
+            <Step num={4} text="Complete health check-ins when prompted — this is how HydraFast monitors your safety." />
+            <Step num={5} text={'When you\'re ready to break your fast, tap "End Fast" and follow the refeeding guide for your fast length.'} />
+          </div>
+        )}
+      </Card>
+
+      {/* Electrolyte Tracking */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('electrolytes')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">⚡</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Electrolyte Tracking</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'electrolytes' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'electrolytes' && (
+          <div className="mt-3 space-y-3">
+            <Step num={1} text="Go to the Track tab and select Electrolytes." />
+            <Step num={2} text='Tap "My Supplements" to save your supplements. Enter the sodium, potassium, and magnesium per serving from the label.' />
+            <Step num={3} text="Once saved, just tap your supplement and enter the number of servings to log all three electrolytes at once." />
+            <Step num={4} text="You can also manually log individual electrolytes using the quick-add buttons." />
+            <p className="text-xs text-text-secondary italic">Electrolyte supplementation is critical for fasts longer than 24 hours. Watch for muscle cramps, dizziness, or headaches — these may signal low electrolytes.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Health Check-Ins & Safety */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('safety')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🛡️</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Health Check-Ins & Safety</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'safety' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'safety' && (
+          <div className="mt-3 space-y-3">
+            <p className="text-xs text-text-secondary">HydraFast uses a traffic-light system to monitor your wellbeing:</p>
+            <div className="flex items-start gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-warning mt-0.5 shrink-0" />
+              <p className="text-xs text-deep-ocean"><strong>Yellow:</strong> Mild symptoms — you'll get hydration and electrolyte reminders.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-orange-500 mt-0.5 shrink-0" />
+              <p className="text-xs text-deep-ocean"><strong>Orange:</strong> Caution — consider breaking your fast and consult a healthcare provider.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="inline-block w-3 h-3 rounded-full bg-danger mt-0.5 shrink-0" />
+              <p className="text-xs text-deep-ocean"><strong>Red:</strong> Urgent — break your fast immediately and seek medical attention if needed.</p>
+            </div>
+            <p className="text-xs text-text-secondary italic">Always be honest in your check-ins. Your safety is more important than any fasting goal.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Refeeding */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('refeeding')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🍽️</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Breaking Your Fast Safely</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'refeeding' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'refeeding' && (
+          <div className="mt-3 space-y-3">
+            <p className="text-xs text-text-secondary">How you break your fast matters. HydraFast automatically selects the right refeeding plan based on how long you fasted:</p>
+            <div className="text-xs text-deep-ocean space-y-2">
+              <p><strong>Under 48 hours:</strong> Low risk. Start with bone broth, soft scrambled eggs, or avocado. Avoid large meals.</p>
+              <p><strong>48-120 hours:</strong> Moderate risk. Follow a 1-2 day structured plan starting with broth, then soft foods, then normal meals.</p>
+              <p><strong>120+ hours:</strong> Elevated risk. Follow a 3-5 day plan. Start with broth only, gradually add foods. Consider physician supervision.</p>
+            </div>
+            <p className="text-xs text-text-secondary italic">Find your full refeeding plan on the Learn tab under "Refeeding Guide."</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Logging Past Fasts */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('pastfasts')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">📋</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Logging Past Fasts</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'pastfasts' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'pastfasts' && (
+          <div className="mt-3 space-y-3">
+            <Step num={1} text='Go to More &gt; Fast History and tap "+ Log Past Fast"' />
+            <Step num={2} text="Enter the start date and time of your past fast." />
+            <Step num={3} text="Enter how long it lasted (pick a preset or enter custom hours) or set an end time." />
+            <Step num={4} text="Select whether you completed the fast or ended early, and add any notes." />
+            <p className="text-xs text-text-secondary italic">Logging past fasts keeps your lifetime stats accurate, including total hours fasted, average duration, and completion rate.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Data & Privacy */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('privacy')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🔒</span>
+            <h3 className="text-sm font-bold text-deep-ocean">Data & Privacy</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'privacy' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'privacy' && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-deep-ocean">All your data stays on your device. HydraFast does not have accounts, servers, or cloud storage.</p>
+            <p className="text-xs text-deep-ocean">You can export your data anytime as JSON or CSV from More &gt; Export Data.</p>
+            <p className="text-xs text-deep-ocean">The app works fully offline once installed.</p>
+            <p className="text-xs text-text-secondary italic">If you clear your browser data or uninstall the app, your data will be lost. Export regularly to keep a backup.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Updates */}
+      <Card className="mb-3">
+        <button onClick={() => toggle('updates')} className="w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl">🔄</span>
+            <h3 className="text-sm font-bold text-deep-ocean">App Updates</h3>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2" className={`transition-transform ${openSection === 'updates' ? 'rotate-180' : ''}`}><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+        {openSection === 'updates' && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-deep-ocean">HydraFast updates automatically. When a new version is available, you'll see a notification at the bottom of the screen.</p>
+            <p className="text-xs text-deep-ocean">Tap "Update Now" to get the latest version, or "Later" to update next time you open the app.</p>
+            <p className="text-xs text-deep-ocean">No reinstall is ever needed — updates happen in the background.</p>
+          </div>
+        )}
+      </Card>
+
+      <p className="text-xs text-text-secondary text-center px-4 mt-4">
+        HydraFast is for informational purposes only and is not medical advice. Consult a healthcare provider before fasting.
+      </p>
+    </div>
+  );
+}
+
+function Step({ num, text }: { num: number; text: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="shrink-0 w-6 h-6 rounded-full bg-still-water text-white text-xs font-bold flex items-center justify-center mt-0.5">{num}</span>
+      <p className="text-xs text-deep-ocean">{text}</p>
+    </div>
   );
 }
 
